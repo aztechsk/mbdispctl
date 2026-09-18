@@ -14,7 +14,7 @@ all: $(TARGET)
 $(TARGET): $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) $(LDLIBS) -o $@
 
-build/main.o: src/main.c src/display_name.h | build
+build/main.o: src/main.c src/display_control.h src/display_name.h | build
 	$(CC) $(CPPFLAGS) $(CSTD) $(WARN) $(CFLAGS) -c $< -o $@
 
 build/display_name.o: src/display_name.m src/display_name.h | build
