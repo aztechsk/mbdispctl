@@ -49,6 +49,28 @@ static int get_online_displays(CGDirectDisplayID **displays, uint32_t *count)
 	return 0;
 }
 
+static int get_builtin_display(CGDirectDisplayID *builtin)
+{
+	CGDirectDisplayID displays[MAX_DISPLAYS];
+	uint32_t count = 0;
+	CGError err;
+
+	*builtin = kCGNullDirectDisplay;
+	err = display_control_get_displays(MAX_DISPLAYS, displays, &count);
+	if (err != kCGErrorSuccess) {
+		fprintf(stderr, "mbdispctl: SkyLight display list API not available or failed: error %d\n", (int)err);
+		return 1;
+	}
+	for (uint32_t i = 0; i < count; i++) {
+		if (CGDisplayIsBuiltin(displays[i])) {
+			*builtin = displays[i];
+			return 0;
+		}
+	}
+	fprintf(stderr, "mbdispctl: built-in display not found\n");
+	return 1;
+}
+
 static int display_status(void)
 {
 	CGDirectDisplayID *displays;
@@ -74,27 +96,28 @@ static int display_status(void)
 static int display_off(void)
 {
 	CGDirectDisplayID *displays;
-	CGDirectDisplayID builtin = kCGNullDirectDisplay;
+	CGDirectDisplayID builtin;
 	CGDisplayConfigRef config = NULL;
 	uint32_t count;
 	unsigned int external_active = 0;
 	CGError err;
 
+	if (get_builtin_display(&builtin) != 0) {
+		return 1;
+	}
+	if (!CGDisplayIsOnline(builtin)) {
+		printf("built-in display already disabled\n");
+		return 0;
+	}
 	if (get_online_displays(&displays, &count) != 0) {
 		return 1;
 	}
 	for (uint32_t i = 0; i < count; i++) {
-		if (CGDisplayIsBuiltin(displays[i])) {
-			builtin = displays[i];
-		} else if (CGDisplayIsActive(displays[i])) {
+		if (displays[i] != builtin && CGDisplayIsActive(displays[i])) {
 			external_active++;
 		}
 	}
 	free(displays);
-	if (builtin == kCGNullDirectDisplay) {
-		fprintf(stderr, "mbdispctl: built-in display not found\n");
-		return 1;
-	}
 	if (external_active == 0) {
 		fprintf(stderr, "mbdispctl: no active external display, refusing to disable built-in display\n");
 		return 1;
@@ -125,25 +148,11 @@ static int display_off(void)
 
 static int display_on(void)
 {
-	CGDirectDisplayID displays[MAX_DISPLAYS];
-	CGDirectDisplayID builtin = kCGNullDirectDisplay;
+	CGDirectDisplayID builtin;
 	CGDisplayConfigRef config = NULL;
-	uint32_t count = 0;
 	CGError err;
 
-	err = display_control_get_displays(MAX_DISPLAYS, displays, &count);
-	if (err != kCGErrorSuccess) {
-		fprintf(stderr, "mbdispctl: SkyLight display list API not available or failed: error %d\n", (int)err);
-		return 1;
-	}
-	for (uint32_t i = 0; i < count; i++) {
-		if (CGDisplayIsBuiltin(displays[i])) {
-			builtin = displays[i];
-			break;
-		}
-	}
-	if (builtin == kCGNullDirectDisplay) {
-		fprintf(stderr, "mbdispctl: built-in display not found\n");
+	if (get_builtin_display(&builtin) != 0) {
 		return 1;
 	}
 	if (CGDisplayIsOnline(builtin)) {
