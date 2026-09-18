@@ -4,12 +4,23 @@
 #include "display_control.h"
 
 typedef CGError (*configure_display_enabled_fn)(CGDisplayConfigRef, CGDirectDisplayID, bool);
+typedef CGError (*get_display_list_fn)(uint32_t, CGDirectDisplayID *, uint32_t *);
 
 static void *skylight;
 static configure_display_enabled_fn configure_display_enabled;
+static get_display_list_fn get_display_list;
 static const char *api_name;
 
-static int load_api(const char *name)
+static int open_skylight(void)
+{
+	if (skylight != NULL) {
+		return 0;
+	}
+	skylight = dlopen("/System/Library/PrivateFrameworks/SkyLight.framework/SkyLight", RTLD_LAZY | RTLD_LOCAL);
+	return skylight != NULL ? 0 : -1;
+}
+
+static int load_configure_api(const char *name)
 {
 	void *symbol;
 
@@ -22,26 +33,48 @@ static int load_api(const char *name)
 	return 0;
 }
 
+static int load_display_list_api(const char *name)
+{
+	void *symbol;
+
+	symbol = dlsym(skylight, name);
+	if (symbol == NULL) {
+		return -1;
+	}
+	memcpy(&get_display_list, &symbol, sizeof(get_display_list));
+	return 0;
+}
+
 int display_control_init(void)
 {
 	if (configure_display_enabled != NULL) {
 		return 0;
 	}
-	skylight = dlopen("/System/Library/PrivateFrameworks/SkyLight.framework/SkyLight", RTLD_LAZY | RTLD_LOCAL);
-	if (skylight == NULL) {
+	if (open_skylight() != 0) {
 		return -1;
 	}
-	if (load_api("SLSConfigureDisplayEnabled") == 0 || load_api("CGSConfigureDisplayEnabled") == 0) {
+	if (load_configure_api("SLSConfigureDisplayEnabled") == 0 ||
+	    load_configure_api("CGSConfigureDisplayEnabled") == 0) {
 		return 0;
 	}
-	dlclose(skylight);
-	skylight = NULL;
 	return -1;
 }
 
 const char *display_control_api(void)
 {
 	return api_name;
+}
+
+CGError display_control_get_displays(uint32_t max_displays, CGDirectDisplayID *displays, uint32_t *count)
+{
+	if (open_skylight() != 0) {
+		return kCGErrorFailure;
+	}
+	if (get_display_list == NULL && load_display_list_api("SLSGetDisplayList") != 0 &&
+	    load_display_list_api("CGSGetDisplayList") != 0) {
+		return kCGErrorFailure;
+	}
+	return get_display_list(max_displays, displays, count);
 }
 
 CGError display_control_set_enabled(CGDisplayConfigRef config, CGDirectDisplayID display, bool enabled)

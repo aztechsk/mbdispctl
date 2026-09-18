@@ -6,6 +6,7 @@
 
 int display_control_init(void);
 const char *display_control_api(void);
+CGError display_control_get_displays(uint32_t max_displays, CGDirectDisplayID *displays, uint32_t *count);
 CGError display_control_set_enabled(CGDisplayConfigRef config, CGDirectDisplayID display, bool enabled);
 
 #endif

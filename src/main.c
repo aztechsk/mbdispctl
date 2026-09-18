@@ -7,6 +7,8 @@
 #include "display_control.h"
 #include "display_name.h"
 
+#define MAX_DISPLAYS 16
+
 static void usage(FILE *out, const char *prog)
 {
 	fprintf(out, "usage: %s {status|on|off}\n", prog);
@@ -121,10 +123,51 @@ static int display_off(void)
 	return 0;
 }
 
-static int not_implemented(const char *command)
+static int display_on(void)
 {
-	fprintf(stderr, "mbdispctl: %s: not implemented\n", command);
-	return 1;
+	CGDirectDisplayID displays[MAX_DISPLAYS];
+	CGDirectDisplayID builtin = kCGNullDirectDisplay;
+	CGDisplayConfigRef config = NULL;
+	uint32_t count = 0;
+	CGError err;
+
+	err = display_control_get_displays(MAX_DISPLAYS, displays, &count);
+	if (err != kCGErrorSuccess) {
+		fprintf(stderr, "mbdispctl: SkyLight display list API not available or failed: error %d\n", (int)err);
+		return 1;
+	}
+	for (uint32_t i = 0; i < count; i++) {
+		if (CGDisplayIsBuiltin(displays[i])) {
+			builtin = displays[i];
+			break;
+		}
+	}
+	if (builtin == kCGNullDirectDisplay) {
+		fprintf(stderr, "mbdispctl: built-in display not found\n");
+		return 1;
+	}
+	if (CGDisplayIsOnline(builtin)) {
+		printf("built-in display already enabled\n");
+		return 0;
+	}
+	err = CGBeginDisplayConfiguration(&config);
+	if (err != kCGErrorSuccess) {
+		fprintf(stderr, "mbdispctl: CGBeginDisplayConfiguration: error %d\n", (int)err);
+		return 1;
+	}
+	err = display_control_set_enabled(config, builtin, true);
+	if (err != kCGErrorSuccess) {
+		fprintf(stderr, "mbdispctl: %s: error %d\n", display_control_api(), (int)err);
+		CGCancelDisplayConfiguration(config);
+		return 1;
+	}
+	err = CGCompleteDisplayConfiguration(config, kCGConfigureForSession);
+	if (err != kCGErrorSuccess) {
+		fprintf(stderr, "mbdispctl: CGCompleteDisplayConfiguration: error %d\n", (int)err);
+		return 1;
+	}
+	printf("built-in display enabled\n");
+	return 0;
 }
 
 int main(int argc, char *argv[])
@@ -144,7 +187,7 @@ int main(int argc, char *argv[])
 		return display_off();
 	}
 	if (!strcmp(argv[1], "on")) {
-		return not_implemented(argv[1]);
+		return display_on();
 	}
 	usage(stderr, argv[0]);
 	return 2;
