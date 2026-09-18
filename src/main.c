@@ -4,6 +4,8 @@
 
 #include <CoreGraphics/CoreGraphics.h>
 
+#include "display_name.h"
+
 static void usage(FILE *out, const char *prog)
 {
 	fprintf(out, "usage: %s {status|on|off}\n", prog);
@@ -42,19 +44,16 @@ static int display_status(void)
 	}
 	for (uint32_t i = 0; i < count; i++) {
 		CGDirectDisplayID display = displays[i];
+		char name[256];
+		boolean_t main = CGDisplayIsMain(display);
 
-		if (!CGDisplayIsBuiltin(display)) {
-			continue;
-		}
-		printf("id=%u online=%s active=%s main=%s asleep=%s\n", (unsigned)display,
-		    yesno(CGDisplayIsOnline(display)), yesno(CGDisplayIsActive(display)),
-		    yesno(CGDisplayIsMain(display)), yesno(CGDisplayIsAsleep(display)));
-		free(displays);
-		return 0;
+		display_get_name(display, name, sizeof(name));
+		printf("%sid=%u name=\"%s\" online=%s active=%s main=%s asleep=%s%s\n", main ? "[" : "",
+		    (unsigned)display, name, yesno(CGDisplayIsOnline(display)), yesno(CGDisplayIsActive(display)),
+		    yesno(main), yesno(CGDisplayIsAsleep(display)), main ? "]" : "");
 	}
 	free(displays);
-	fprintf(stderr, "mbdispctl: built-in display not found\n");
-	return 1;
+	return 0;
 }
 
 static int not_implemented(const char *command)

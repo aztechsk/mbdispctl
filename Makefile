@@ -1,12 +1,11 @@
 CC = clang
 TARGET = build/mbdispctl
-SRC = src/main.c
-OBJ = build/main.o
+OBJ = build/main.o build/display_name.o
 
 CSTD = -std=c17
 WARN = -Wall -Wextra -Wpedantic
 CFLAGS ?= -O2 -g
-LDLIBS = -framework CoreFoundation -framework CoreGraphics
+LDLIBS = -framework CoreFoundation -framework CoreGraphics -framework AppKit
 
 .PHONY: all clean
 
@@ -15,7 +14,10 @@ all: $(TARGET)
 $(TARGET): $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) $(LDLIBS) -o $@
 
-$(OBJ): $(SRC) | build
+build/main.o: src/main.c src/display_name.h | build
+	$(CC) $(CPPFLAGS) $(CSTD) $(WARN) $(CFLAGS) -c $< -o $@
+
+build/display_name.o: src/display_name.m src/display_name.h | build
 	$(CC) $(CPPFLAGS) $(CSTD) $(WARN) $(CFLAGS) -c $< -o $@
 
 build:
