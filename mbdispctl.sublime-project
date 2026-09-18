@@ -1,0 +1,61 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+			"folder_exclude_patterns":
+			[
+				".git",
+				"build"
+			],
+			"file_exclude_patterns":
+			[
+				".DS_Store"
+			]
+		}
+	],
+	"settings":
+	{
+		"tab_size": 8,
+		"indent_size": 8,
+		"translate_tabs_to_spaces": false,
+		"trim_trailing_white_space_on_save": true,
+		"ensure_newline_at_eof_on_save": true,
+		"word_wrap": false,
+		"rulers": [100],
+		"highlight_line": true
+	},
+	"build_systems":
+	[
+		{
+			"name": "Make",
+			"shell_cmd": "make",
+			"working_dir": "$project_path",
+			"selector": "source.c",
+			"file_regex": "^(.+?):([0-9]+):([0-9]+): (.*)$",
+			"variants":
+			[
+				{
+					"name": "Clean",
+					"shell_cmd": "make clean",
+					"working_dir": "$project_path"
+				},
+				{
+					"name": "Rebuild",
+					"shell_cmd": "make clean && make",
+					"working_dir": "$project_path"
+				},
+				{
+					"name": "Run",
+					"shell_cmd": "./build/mbdispctl",
+					"working_dir": "$project_path"
+				},
+				{
+					"name": "Build & Run",
+					"shell_cmd": "make && ./build/mbdispctl",
+					"working_dir": "$project_path"
+				}
+			]
+		}
+	]
+}
