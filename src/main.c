@@ -1,9 +1,60 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include <CoreGraphics/CoreGraphics.h>
 
 static void usage(FILE *out, const char *prog)
 {
 	fprintf(out, "usage: %s {status|on|off}\n", prog);
+}
+
+static const char *yesno(boolean_t value)
+{
+	return value ? "yes" : "no";
+}
+
+static int display_status(void)
+{
+	CGDirectDisplayID *displays;
+	uint32_t count = 0;
+	CGError err;
+
+	err = CGGetOnlineDisplayList(0, NULL, &count);
+	if (err != kCGErrorSuccess) {
+		fprintf(stderr, "mbdispctl: CGGetOnlineDisplayList: error %d\n", (int)err);
+		return 1;
+	}
+	if (count == 0) {
+		fprintf(stderr, "mbdispctl: no online displays\n");
+		return 1;
+	}
+	displays = malloc(count * sizeof(*displays));
+	if (displays == NULL) {
+		fprintf(stderr, "mbdispctl: out of memory\n");
+		return 1;
+	}
+	err = CGGetOnlineDisplayList(count, displays, &count);
+	if (err != kCGErrorSuccess) {
+		fprintf(stderr, "mbdispctl: CGGetOnlineDisplayList: error %d\n", (int)err);
+		free(displays);
+		return 1;
+	}
+	for (uint32_t i = 0; i < count; i++) {
+		CGDirectDisplayID display = displays[i];
+
+		if (!CGDisplayIsBuiltin(display)) {
+			continue;
+		}
+		printf("id=%u online=%s active=%s main=%s asleep=%s\n", (unsigned)display,
+		    yesno(CGDisplayIsOnline(display)), yesno(CGDisplayIsActive(display)),
+		    yesno(CGDisplayIsMain(display)), yesno(CGDisplayIsAsleep(display)));
+		free(displays);
+		return 0;
+	}
+	free(displays);
+	fprintf(stderr, "mbdispctl: built-in display not found\n");
+	return 1;
 }
 
 static int not_implemented(const char *command)
@@ -22,9 +73,12 @@ int main(int argc, char *argv[])
 		usage(stdout, argv[0]);
 		return 0;
 	}
-	if (!strcmp(argv[1], "status") || !strcmp(argv[1], "on") ||
-	    !strcmp(argv[1], "off"))
+	if (!strcmp(argv[1], "status")) {
+		return display_status();
+	}
+	if (!strcmp(argv[1], "on") || !strcmp(argv[1], "off")) {
 		return not_implemented(argv[1]);
+	}
 	usage(stderr, argv[0]);
 	return 2;
 }
