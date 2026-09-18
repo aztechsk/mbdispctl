@@ -1,6 +1,6 @@
 CC = clang
 TARGET = build/mbdispctl
-OBJ = build/main.o build/display_name.o
+OBJ = build/main.o build/display_name.o build/display_control.o
 
 CSTD = -std=c17
 WARN = -Wall -Wextra -Wpedantic
@@ -18,6 +18,9 @@ build/main.o: src/main.c src/display_name.h | build
 	$(CC) $(CPPFLAGS) $(CSTD) $(WARN) $(CFLAGS) -c $< -o $@
 
 build/display_name.o: src/display_name.m src/display_name.h | build
+	$(CC) $(CPPFLAGS) $(CSTD) $(WARN) $(CFLAGS) -c $< -o $@
+
+build/display_control.o: src/display_control.c src/display_control.h | build
 	$(CC) $(CPPFLAGS) $(CSTD) $(WARN) $(CFLAGS) -c $< -o $@
 
 build:
