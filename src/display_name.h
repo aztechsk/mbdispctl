@@ -13,6 +13,9 @@
 #include <stddef.h>
 #include <CoreGraphics/CoreGraphics.h>
 
+/**
+ * display_get_name
+ */
 int display_get_name(CGDirectDisplayID display, char *name, size_t size);
 
 #endif
