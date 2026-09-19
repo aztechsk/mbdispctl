@@ -4,10 +4,8 @@
 
 #include <CoreGraphics/CoreGraphics.h>
 
-#include "display_control.h"
+#include "builtin_display.h"
 #include "display_name.h"
-
-#define MAX_DISPLAYS 16
 
 static void usage(FILE *out, const char *prog)
 {
@@ -49,28 +47,6 @@ static int get_online_displays(CGDirectDisplayID **displays, uint32_t *count)
 	return 0;
 }
 
-static int get_builtin_display(CGDirectDisplayID *builtin)
-{
-	CGDirectDisplayID displays[MAX_DISPLAYS];
-	uint32_t count = 0;
-	CGError err;
-
-	*builtin = kCGNullDirectDisplay;
-	err = display_control_get_displays(MAX_DISPLAYS, displays, &count);
-	if (err != kCGErrorSuccess) {
-		fprintf(stderr, "mbdispctl: SkyLight display list API not available or failed: error %d\n", (int)err);
-		return 1;
-	}
-	for (uint32_t i = 0; i < count; i++) {
-		if (CGDisplayIsBuiltin(displays[i])) {
-			*builtin = displays[i];
-			return 0;
-		}
-	}
-	fprintf(stderr, "mbdispctl: built-in display not found\n");
-	return 1;
-}
-
 static int display_status(void)
 {
 	CGDirectDisplayID *displays;
@@ -93,89 +69,20 @@ static int display_status(void)
 	return 0;
 }
 
-static int display_off(void)
+static int display_set_enabled(bool enabled)
 {
-	CGDirectDisplayID *displays;
-	CGDirectDisplayID builtin;
-	CGDisplayConfigRef config = NULL;
-	uint32_t count;
-	unsigned int external_active = 0;
-	CGError err;
+	char error[256];
+	bool changed;
 
-	if (get_builtin_display(&builtin) != 0) {
+	if (builtin_display_set_enabled(enabled, &changed, error, sizeof(error)) != 0) {
+		fprintf(stderr, "mbdispctl: %s\n", error);
 		return 1;
 	}
-	if (!CGDisplayIsOnline(builtin)) {
-		printf("built-in display already disabled\n");
-		return 0;
+	if (enabled) {
+		printf("built-in display %s\n", changed ? "enabled" : "already enabled");
+	} else {
+		printf("built-in display %s\n", changed ? "disabled" : "already disabled");
 	}
-	if (get_online_displays(&displays, &count) != 0) {
-		return 1;
-	}
-	for (uint32_t i = 0; i < count; i++) {
-		if (displays[i] != builtin && CGDisplayIsActive(displays[i])) {
-			external_active++;
-		}
-	}
-	free(displays);
-	if (external_active == 0) {
-		fprintf(stderr, "mbdispctl: no active external display, refusing to disable built-in display\n");
-		return 1;
-	}
-	if (display_control_init() != 0) {
-		fprintf(stderr, "mbdispctl: SkyLight display control API not available\n");
-		return 1;
-	}
-	err = CGBeginDisplayConfiguration(&config);
-	if (err != kCGErrorSuccess) {
-		fprintf(stderr, "mbdispctl: CGBeginDisplayConfiguration: error %d\n", (int)err);
-		return 1;
-	}
-	err = display_control_set_enabled(config, builtin, false);
-	if (err != kCGErrorSuccess) {
-		fprintf(stderr, "mbdispctl: %s: error %d\n", display_control_api(), (int)err);
-		CGCancelDisplayConfiguration(config);
-		return 1;
-	}
-	err = CGCompleteDisplayConfiguration(config, kCGConfigureForSession);
-	if (err != kCGErrorSuccess) {
-		fprintf(stderr, "mbdispctl: CGCompleteDisplayConfiguration: error %d\n", (int)err);
-		return 1;
-	}
-	printf("built-in display disabled\n");
-	return 0;
-}
-
-static int display_on(void)
-{
-	CGDirectDisplayID builtin;
-	CGDisplayConfigRef config = NULL;
-	CGError err;
-
-	if (get_builtin_display(&builtin) != 0) {
-		return 1;
-	}
-	if (CGDisplayIsOnline(builtin)) {
-		printf("built-in display already enabled\n");
-		return 0;
-	}
-	err = CGBeginDisplayConfiguration(&config);
-	if (err != kCGErrorSuccess) {
-		fprintf(stderr, "mbdispctl: CGBeginDisplayConfiguration: error %d\n", (int)err);
-		return 1;
-	}
-	err = display_control_set_enabled(config, builtin, true);
-	if (err != kCGErrorSuccess) {
-		fprintf(stderr, "mbdispctl: %s: error %d\n", display_control_api(), (int)err);
-		CGCancelDisplayConfiguration(config);
-		return 1;
-	}
-	err = CGCompleteDisplayConfiguration(config, kCGConfigureForSession);
-	if (err != kCGErrorSuccess) {
-		fprintf(stderr, "mbdispctl: CGCompleteDisplayConfiguration: error %d\n", (int)err);
-		return 1;
-	}
-	printf("built-in display enabled\n");
 	return 0;
 }
 
@@ -193,10 +100,10 @@ int main(int argc, char *argv[])
 		return display_status();
 	}
 	if (!strcmp(argv[1], "off")) {
-		return display_off();
+		return display_set_enabled(false);
 	}
 	if (!strcmp(argv[1], "on")) {
-		return display_on();
+		return display_set_enabled(true);
 	}
 	usage(stderr, argv[0]);
 	return 2;
