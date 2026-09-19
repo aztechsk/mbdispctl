@@ -27,6 +27,9 @@
 @end
 
 @implementation MBDisplayStateView
+/**
+ * setDisplayEnabled:known:
+ */
 - (void)setDisplayEnabled:(BOOL)enabled known:(BOOL)known
 {
 	display_enabled = enabled;
@@ -34,6 +37,9 @@
 	[self setNeedsDisplay:YES];
 }
 
+/**
+ * drawRect:
+ */
 - (void)drawRect:(NSRect)dirtyRect
 {
 	NSColor *color;
@@ -59,6 +65,9 @@
 - (void)displayConfigurationChanged;
 @end
 
+/**
+ * display_reconfiguration_callback
+ */
 static void display_reconfiguration_callback(CGDirectDisplayID display, CGDisplayChangeSummaryFlags flags,
     void *user_info)
 {
@@ -74,6 +83,9 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 }
 
 @implementation MBAppDelegate
+/**
+ * setupMainMenu
+ */
 - (void)setupMainMenu
 {
 	NSMenu *main_menu;
@@ -112,6 +124,9 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	[main_menu release];
 }
 
+/**
+ * centerWindow
+ */
 - (void)centerWindow
 {
 	NSScreen *screen;
@@ -130,6 +145,9 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	[window setFrameOrigin:window_frame.origin];
 }
 
+/**
+ * showError:
+ */
 - (void)showError:(const char *)error
 {
 	NSAlert *alert;
@@ -147,6 +165,9 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	[alert release];
 }
 
+/**
+ * refreshState:
+ */
 - (void)refreshState:(BOOL)show_error
 {
 	char error[256];
@@ -169,11 +190,17 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	[toggle_button setBezelColor:enabled ? [NSColor systemRedColor] : [NSColor systemGreenColor]];
 }
 
+/**
+ * displayConfigurationChanged
+ */
 - (void)displayConfigurationChanged
 {
 	[self refreshState:NO];
 }
 
+/**
+ * toggleDisplay:
+ */
 - (void)toggleDisplay:(id)sender
 {
 	char error[256];
@@ -193,6 +220,9 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	[self refreshState:YES];
 }
 
+/**
+ * applicationDidFinishLaunching:
+ */
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
 {
 	NSRect frame;
@@ -245,6 +275,9 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	}
 }
 
+/**
+ * applicationDidBecomeActive:
+ */
 - (void)applicationDidBecomeActive:(NSNotification *)notification
 {
 	(void)notification;
@@ -253,6 +286,9 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	}
 }
 
+/**
+ * applicationShouldHandleReopen:hasVisibleWindows:
+ */
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender hasVisibleWindows:(BOOL)has_visible_windows
 {
 	(void)sender;
@@ -264,15 +300,21 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 		[window makeKeyAndOrderFront:nil];
 		[self refreshState:NO];
 	}
-	return NO;
+	return (NO);
 }
 
+/**
+ * applicationShouldTerminateAfterLastWindowClosed:
+ */
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
 {
 	(void)sender;
-	return YES;
+	return (YES);
 }
 
+/**
+ * dealloc
+ */
 - (void)dealloc
 {
 	if (display_callback_registered) {
@@ -283,6 +325,9 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 }
 @end
 
+/**
+ * gui_run
+ */
 int gui_run(void)
 {
 	NSApplication *app;
@@ -297,5 +342,5 @@ int gui_run(void)
 		[app setDelegate:nil];
 		[delegate release];
 	}
-	return 0;
+	return (0);
 }
