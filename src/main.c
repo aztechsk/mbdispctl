@@ -22,7 +22,7 @@
  */
 static void usage(FILE *out, const char *prog)
 {
-	fprintf(out, "usage: %s [status|on|off|-v|--version]\n", prog);
+	fprintf(out, "usage: %s [status|on|off|-h|--help|-v|--version]\n", prog);
 }
 
 /**

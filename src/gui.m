@@ -93,12 +93,20 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	NSMenu *window_menu;
 	NSMenuItem *app_item;
 	NSMenuItem *window_item;
+	NSMenuItem *about_item;
+	NSMenuItem *separator_item;
 	NSMenuItem *quit_item;
 	NSMenuItem *minimize_item;
 
 	main_menu = [[NSMenu alloc] initWithTitle:@""];
 	app_item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
 	app_menu = [[NSMenu alloc] initWithTitle:@"mbdispctl"];
+	about_item = [[NSMenuItem alloc] initWithTitle:@"About mbdispctl" action:@selector(orderFrontStandardAboutPanel:)
+	    keyEquivalent:@""];
+	[about_item setTarget:NSApp];
+	[app_menu addItem:about_item];
+	separator_item = [NSMenuItem separatorItem];
+	[app_menu addItem:separator_item];
 	quit_item = [[NSMenuItem alloc] initWithTitle:@"Quit mbdispctl" action:@selector(terminate:) keyEquivalent:@"q"];
 	[quit_item setTarget:NSApp];
 	[quit_item setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
@@ -119,6 +127,7 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	[window_menu release];
 	[window_item release];
 	[quit_item release];
+	[about_item release];
 	[app_menu release];
 	[app_item release];
 	[main_menu release];

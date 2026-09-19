@@ -47,12 +47,12 @@
 				},
 				{
 					"name": "Run",
-					"shell_cmd": "./build/mbdispctl",
+					"shell_cmd": "open build/mbdispctl.app",
 					"working_dir": "$project_path"
 				},
 				{
 					"name": "Build & Run",
-					"shell_cmd": "make && ./build/mbdispctl",
+					"shell_cmd": "make run-app",
 					"working_dir": "$project_path"
 				}
 			]
