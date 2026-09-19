@@ -6,10 +6,11 @@
 
 #include "builtin_display.h"
 #include "display_name.h"
+#include "gui.h"
 
 static void usage(FILE *out, const char *prog)
 {
-	fprintf(out, "usage: %s {status|on|off}\n", prog);
+	fprintf(out, "usage: %s [status|on|off]\n", prog);
 }
 
 static const char *yesno(boolean_t value)
@@ -88,6 +89,9 @@ static int display_set_enabled(bool enabled)
 
 int main(int argc, char *argv[])
 {
+	if (argc == 1) {
+		return gui_run();
+	}
 	if (argc != 2) {
 		usage(stderr, argv[0]);
 		return 2;
