@@ -1,6 +1,7 @@
 CC = clang
 TARGET = build/mbdispctl
 APP = build/mbdispctl.app
+APP_ICON = app/mbdispctl.icns
 OBJ = build/main.o build/gui.o build/builtin_display.o build/display_name.o build/display_control.o
 
 CSTD = -std=c17
@@ -12,7 +13,7 @@ LDLIBS = -framework CoreFoundation -framework CoreGraphics -framework AppKit
 
 all: $(TARGET)
 
-app: $(APP)/Contents/Info.plist $(APP)/Contents/MacOS/mbdispctl
+app: $(APP)/Contents/Info.plist $(APP)/Contents/MacOS/mbdispctl $(APP)/Contents/Resources/mbdispctl.icns
 
 run-app: app
 	open $(APP)
@@ -26,6 +27,10 @@ $(APP)/Contents/Info.plist: app/Info.plist
 
 $(APP)/Contents/MacOS/mbdispctl: $(TARGET)
 	mkdir -p $(APP)/Contents/MacOS
+	cp $< $@
+
+$(APP)/Contents/Resources/mbdispctl.icns: $(APP_ICON)
+	mkdir -p $(APP)/Contents/Resources
 	cp $< $@
 
 build/main.o: src/main.c src/builtin_display.h src/display_name.h src/gui.h | build
