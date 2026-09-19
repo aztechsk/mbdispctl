@@ -7,6 +7,7 @@
 #define WINDOW_HEIGHT 160.0
 #define BUTTON_WIDTH 140.0
 #define BUTTON_HEIGHT 52.0
+#define LABEL_HEIGHT 24.0
 
 @interface MBDisplayStateView : NSView {
 	BOOL state_known;
@@ -46,6 +47,47 @@
 @end
 
 @implementation MBAppDelegate
+- (void)setupMainMenu
+{
+	NSMenu *main_menu;
+	NSMenu *app_menu;
+	NSMenuItem *app_item;
+	NSMenuItem *quit_item;
+
+	main_menu = [[NSMenu alloc] initWithTitle:@""];
+	app_item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+	app_menu = [[NSMenu alloc] initWithTitle:@"mbdispctl"];
+	quit_item = [[NSMenuItem alloc] initWithTitle:@"Quit mbdispctl" action:@selector(terminate:) keyEquivalent:@"q"];
+	[quit_item setTarget:NSApp];
+	[quit_item setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
+	[app_menu addItem:quit_item];
+	[app_item setSubmenu:app_menu];
+	[main_menu addItem:app_item];
+	[NSApp setMainMenu:main_menu];
+	[quit_item release];
+	[app_menu release];
+	[app_item release];
+	[main_menu release];
+}
+
+- (void)centerWindow
+{
+	NSScreen *screen;
+	NSRect screen_frame;
+	NSRect window_frame;
+
+	screen = [NSScreen mainScreen];
+	if (screen == nil) {
+		[window center];
+		return;
+	}
+	screen_frame = [screen visibleFrame];
+	window_frame = [window frame];
+	window_frame.origin.x = NSMidX(screen_frame) - NSWidth(window_frame) / 2.0;
+	window_frame.origin.y = NSMidY(screen_frame) - NSHeight(window_frame) / 2.0;
+	[window setFrameOrigin:window_frame.origin];
+}
+
 - (void)showError:(const char *)error
 {
 	NSAlert *alert;
@@ -79,6 +121,7 @@
 	[state_view setDisplayEnabled:enabled known:YES];
 	[toggle_button setEnabled:YES];
 	[toggle_button setTitle:enabled ? @"OFF" : @"ON"];
+	[toggle_button setToolTip:enabled ? @"Disable internal display" : @"Enable internal display"];
 	[toggle_button setBezelColor:enabled ? [NSColor systemRedColor] : [NSColor systemGreenColor]];
 }
 
@@ -104,10 +147,13 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
 {
 	NSRect frame;
+	NSRect label_frame;
 	NSRect button_frame;
 	NSWindowStyleMask style;
+	NSTextField *label;
 
 	(void)notification;
+	[self setupMainMenu];
 	frame = NSMakeRect(0.0, 0.0, WINDOW_WIDTH, WINDOW_HEIGHT);
 	style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable;
 	window = [[NSWindow alloc] initWithContentRect:frame styleMask:style backing:NSBackingStoreBuffered defer:NO];
@@ -116,8 +162,18 @@
 	state_view = [[MBDisplayStateView alloc] initWithFrame:frame];
 	[window setContentView:state_view];
 	[state_view release];
-	button_frame = NSMakeRect((WINDOW_WIDTH - BUTTON_WIDTH) / 2.0, (WINDOW_HEIGHT - BUTTON_HEIGHT) / 2.0,
-	    BUTTON_WIDTH, BUTTON_HEIGHT);
+	label_frame = NSMakeRect(0.0, WINDOW_HEIGHT - LABEL_HEIGHT - 18.0, WINDOW_WIDTH, LABEL_HEIGHT);
+	label = [[NSTextField alloc] initWithFrame:label_frame];
+	[label setStringValue:@"Internal Display"];
+	[label setAlignment:NSTextAlignmentCenter];
+	[label setBezeled:NO];
+	[label setDrawsBackground:NO];
+	[label setEditable:NO];
+	[label setSelectable:NO];
+	[label setFont:[NSFont boldSystemFontOfSize:18.0]];
+	[state_view addSubview:label];
+	[label release];
+	button_frame = NSMakeRect((WINDOW_WIDTH - BUTTON_WIDTH) / 2.0, 32.0, BUTTON_WIDTH, BUTTON_HEIGHT);
 	toggle_button = [[NSButton alloc] initWithFrame:button_frame];
 	[toggle_button setButtonType:NSButtonTypeMomentaryPushIn];
 	[toggle_button setBezelStyle:NSBezelStyleRounded];
@@ -126,7 +182,7 @@
 	[toggle_button setAction:@selector(toggleDisplay:)];
 	[state_view addSubview:toggle_button];
 	[toggle_button release];
-	[window center];
+	[self centerWindow];
 	[window makeKeyAndOrderFront:nil];
 	[NSApp activate];
 	[self refreshState:YES];
