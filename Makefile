@@ -1,3 +1,12 @@
+#
+# Makefile
+#
+# Copyright (c) 2026 Ján Rusnák and contributors
+#
+# Distributed under the BSD license.
+# See the LICENSE file in the project root for details.
+#
+
 CC = clang
 TARGET = build/mbdispctl
 APP = build/mbdispctl.app

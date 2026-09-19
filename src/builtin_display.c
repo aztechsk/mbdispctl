@@ -1,3 +1,12 @@
+/*
+ * builtin_display.c
+ *
+ * Copyright (c) 2026 Ján Rusnák and contributors
+ *
+ * Distributed under the BSD license.
+ * See the LICENSE file in the project root for details.
+ */
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>

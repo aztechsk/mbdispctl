@@ -1,5 +1,14 @@
 #!/bin/sh
 
+#
+# check-build-deps.sh
+#
+# Copyright (c) 2026 Ján Rusnák and contributors
+#
+# Distributed under the BSD license.
+# See the LICENSE file in the project root for details.
+#
+
 LC_ALL=C
 export LC_ALL
 

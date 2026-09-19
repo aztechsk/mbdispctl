@@ -1,3 +1,12 @@
+/*
+ * display_control.c
+ *
+ * Copyright (c) 2026 Ján Rusnák and contributors
+ *
+ * Distributed under the BSD license.
+ * See the LICENSE file in the project root for details.
+ */
+
 #include <dlfcn.h>
 #include <string.h>
 
