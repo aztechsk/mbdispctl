@@ -1,5 +1,8 @@
 #import <AppKit/AppKit.h>
 
+#include <stdio.h>
+#include <CoreGraphics/CoreGraphics.h>
+
 #include "builtin_display.h"
 #include "gui.h"
 
@@ -43,8 +46,24 @@
 	NSWindow *window;
 	MBDisplayStateView *state_view;
 	NSButton *toggle_button;
+	BOOL display_callback_registered;
 }
+- (void)displayConfigurationChanged;
 @end
+
+static void display_reconfiguration_callback(CGDirectDisplayID display, CGDisplayChangeSummaryFlags flags,
+    void *user_info)
+{
+	MBAppDelegate *delegate = (MBAppDelegate *)user_info;
+	CGDisplayChangeSummaryFlags relevant_flags;
+
+	(void)display;
+	relevant_flags = kCGDisplayAddFlag | kCGDisplayRemoveFlag | kCGDisplayEnabledFlag | kCGDisplayDisabledFlag;
+	if ((flags & kCGDisplayBeginConfigurationFlag) || !(flags & relevant_flags)) {
+		return;
+	}
+	[delegate performSelectorOnMainThread:@selector(displayConfigurationChanged) withObject:nil waitUntilDone:NO];
+}
 
 @implementation MBAppDelegate
 - (void)setupMainMenu
@@ -125,6 +144,11 @@
 	[toggle_button setBezelColor:enabled ? [NSColor systemRedColor] : [NSColor systemGreenColor]];
 }
 
+- (void)displayConfigurationChanged
+{
+	[self refreshState:NO];
+}
+
 - (void)toggleDisplay:(id)sender
 {
 	char error[256];
@@ -151,6 +175,8 @@
 	NSRect button_frame;
 	NSWindowStyleMask style;
 	NSTextField *label;
+	CGError err;
+	char error[256];
 
 	(void)notification;
 	[self setupMainMenu];
@@ -186,6 +212,13 @@
 	[window makeKeyAndOrderFront:nil];
 	[NSApp activate];
 	[self refreshState:YES];
+	err = CGDisplayRegisterReconfigurationCallback(display_reconfiguration_callback, self);
+	if (err == kCGErrorSuccess) {
+		display_callback_registered = YES;
+	} else {
+		snprintf(error, sizeof(error), "CGDisplayRegisterReconfigurationCallback: error %d", (int)err);
+		[self showError:error];
+	}
 }
 
 - (void)applicationDidBecomeActive:(NSNotification *)notification
@@ -204,6 +237,9 @@
 
 - (void)dealloc
 {
+	if (display_callback_registered) {
+		CGDisplayRemoveReconfigurationCallback(display_reconfiguration_callback, self);
+	}
 	[window release];
 	[super dealloc];
 }
