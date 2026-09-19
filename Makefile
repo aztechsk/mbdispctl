@@ -1,5 +1,6 @@
 CC = clang
 TARGET = build/mbdispctl
+APP = build/mbdispctl.app
 OBJ = build/main.o build/gui.o build/builtin_display.o build/display_name.o build/display_control.o
 
 CSTD = -std=c17
@@ -7,12 +8,25 @@ WARN = -Wall -Wextra -Wpedantic
 CFLAGS ?= -O2 -g
 LDLIBS = -framework CoreFoundation -framework CoreGraphics -framework AppKit
 
-.PHONY: all clean
+.PHONY: all app run-app clean
 
 all: $(TARGET)
 
+app: $(APP)/Contents/Info.plist $(APP)/Contents/MacOS/mbdispctl
+
+run-app: app
+	open $(APP)
+
 $(TARGET): $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) $(LDLIBS) -o $@
+
+$(APP)/Contents/Info.plist: app/Info.plist
+	mkdir -p $(APP)/Contents
+	cp $< $@
+
+$(APP)/Contents/MacOS/mbdispctl: $(TARGET)
+	mkdir -p $(APP)/Contents/MacOS
+	cp $< $@
 
 build/main.o: src/main.c src/builtin_display.h src/display_name.h src/gui.h | build
 	$(CC) $(CPPFLAGS) $(CSTD) $(WARN) $(CFLAGS) -c $< -o $@

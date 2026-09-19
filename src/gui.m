@@ -70,8 +70,11 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 {
 	NSMenu *main_menu;
 	NSMenu *app_menu;
+	NSMenu *window_menu;
 	NSMenuItem *app_item;
+	NSMenuItem *window_item;
 	NSMenuItem *quit_item;
+	NSMenuItem *minimize_item;
 
 	main_menu = [[NSMenu alloc] initWithTitle:@""];
 	app_item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
@@ -82,7 +85,19 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	[app_menu addItem:quit_item];
 	[app_item setSubmenu:app_menu];
 	[main_menu addItem:app_item];
+	window_item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+	window_menu = [[NSMenu alloc] initWithTitle:@"Window"];
+	minimize_item = [[NSMenuItem alloc] initWithTitle:@"Minimize" action:@selector(performMiniaturize:)
+	    keyEquivalent:@"m"];
+	[minimize_item setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
+	[window_menu addItem:minimize_item];
+	[window_item setSubmenu:window_menu];
+	[main_menu addItem:window_item];
 	[NSApp setMainMenu:main_menu];
+	[NSApp setWindowsMenu:window_menu];
+	[minimize_item release];
+	[window_menu release];
+	[window_item release];
 	[quit_item release];
 	[app_menu release];
 	[app_item release];
@@ -227,6 +242,20 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	if (window != nil) {
 		[self refreshState:NO];
 	}
+}
+
+- (BOOL)applicationShouldHandleReopen:(NSApplication *)sender hasVisibleWindows:(BOOL)has_visible_windows
+{
+	(void)sender;
+	(void)has_visible_windows;
+	if (window != nil) {
+		if ([window isMiniaturized]) {
+			[window deminiaturize:nil];
+		}
+		[window makeKeyAndOrderFront:nil];
+		[self refreshState:NO];
+	}
+	return NO;
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
