@@ -3,7 +3,7 @@
 #
 # Copyright (c) 2026 Ján Rusnák and contributors
 #
-# Distributed under the BSD license.
+# Distributed under the ISC license.
 # See the LICENSE file in the project root for details.
 #
 
