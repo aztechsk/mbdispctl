@@ -35,7 +35,7 @@
 	if (!state_known) {
 		color = [NSColor windowBackgroundColor];
 	} else {
-		color = display_enabled ? [NSColor systemGreenColor] : [NSColor systemRedColor];
+		color = display_enabled ? [NSColor systemGreenColor] : [NSColor colorWithWhite:0.16 alpha:1.0];
 	}
 	[color setFill];
 	NSRectFill([self bounds]);
@@ -46,6 +46,7 @@
 	NSWindow *window;
 	MBDisplayStateView *state_view;
 	NSButton *toggle_button;
+	NSTextField *title_label;
 	BOOL display_callback_registered;
 }
 - (void)displayConfigurationChanged;
@@ -147,6 +148,7 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	if (builtin_display_get_enabled(&enabled, error, sizeof(error)) != 0) {
 		[state_view setDisplayEnabled:NO known:NO];
 		[toggle_button setEnabled:NO];
+		[title_label setTextColor:[NSColor labelColor]];
 		if (show_error) {
 			[self showError:error];
 		}
@@ -154,6 +156,7 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	}
 	[state_view setDisplayEnabled:enabled known:YES];
 	[toggle_button setEnabled:YES];
+	[title_label setTextColor:enabled ? [NSColor colorWithWhite:0.10 alpha:1.0] : [NSColor whiteColor]];
 	[toggle_button setTitle:enabled ? @"OFF" : @"ON"];
 	[toggle_button setToolTip:enabled ? @"Disable internal display" : @"Enable internal display"];
 	[toggle_button setBezelColor:enabled ? [NSColor systemRedColor] : [NSColor systemGreenColor]];
@@ -189,7 +192,6 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	NSRect label_frame;
 	NSRect button_frame;
 	NSWindowStyleMask style;
-	NSTextField *label;
 	CGError err;
 	char error[256];
 
@@ -204,16 +206,16 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 	[window setContentView:state_view];
 	[state_view release];
 	label_frame = NSMakeRect(0.0, WINDOW_HEIGHT - LABEL_HEIGHT - 18.0, WINDOW_WIDTH, LABEL_HEIGHT);
-	label = [[NSTextField alloc] initWithFrame:label_frame];
-	[label setStringValue:@"Internal Display"];
-	[label setAlignment:NSTextAlignmentCenter];
-	[label setBezeled:NO];
-	[label setDrawsBackground:NO];
-	[label setEditable:NO];
-	[label setSelectable:NO];
-	[label setFont:[NSFont boldSystemFontOfSize:18.0]];
-	[state_view addSubview:label];
-	[label release];
+	title_label = [[NSTextField alloc] initWithFrame:label_frame];
+	[title_label setStringValue:@"Internal Display"];
+	[title_label setAlignment:NSTextAlignmentCenter];
+	[title_label setBezeled:NO];
+	[title_label setDrawsBackground:NO];
+	[title_label setEditable:NO];
+	[title_label setSelectable:NO];
+	[title_label setFont:[NSFont boldSystemFontOfSize:18.0]];
+	[state_view addSubview:title_label];
+	[title_label release];
 	button_frame = NSMakeRect((WINDOW_WIDTH - BUTTON_WIDTH) / 2.0, 32.0, BUTTON_WIDTH, BUTTON_HEIGHT);
 	toggle_button = [[NSButton alloc] initWithFrame:button_frame];
 	[toggle_button setButtonType:NSButtonTypeMomentaryPushIn];
