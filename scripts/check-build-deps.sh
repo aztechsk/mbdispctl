@@ -33,7 +33,7 @@ need_cmd()
 }
 
 printf 'mbdispctl build dependency check\n'
-printf '--------------------------------\n'
+printf '%s\n' '--------------------------------'
 
 if [ "$(uname -s 2>/dev/null)" = "Darwin" ]; then
 	macos_version=$(sw_vers -productVersion 2>/dev/null || printf 'unknown')
