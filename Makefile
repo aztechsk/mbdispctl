@@ -14,6 +14,7 @@ LDLIBS = -framework CoreFoundation -framework CoreGraphics -framework AppKit
 all: $(TARGET)
 
 app: $(APP)/Contents/Info.plist $(APP)/Contents/MacOS/mbdispctl $(APP)/Contents/Resources/mbdispctl.icns
+	codesign --force --sign - $(APP)
 
 run-app: app
 	open $(APP)
