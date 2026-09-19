@@ -8,10 +8,8 @@
  */
 
 #import <AppKit/AppKit.h>
-
 #include <stdio.h>
 #include <CoreGraphics/CoreGraphics.h>
-
 #include "builtin_display.h"
 #include "gui.h"
 

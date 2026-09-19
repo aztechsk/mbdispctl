@@ -10,6 +10,9 @@
 #ifndef GUI_H
 #define GUI_H
 
+/**
+ * gui_run
+ */
 int gui_run(void);
 
 #endif
