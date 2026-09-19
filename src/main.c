@@ -8,9 +8,11 @@
 #include "display_name.h"
 #include "gui.h"
 
+#define MBDISPCTL_VERSION "1.00"
+
 static void usage(FILE *out, const char *prog)
 {
-	fprintf(out, "usage: %s [status|on|off]\n", prog);
+	fprintf(out, "usage: %s [status|on|off|-v|--version]\n", prog);
 }
 
 static const char *yesno(boolean_t value)
@@ -98,6 +100,10 @@ int main(int argc, char *argv[])
 	}
 	if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
 		usage(stdout, argv[0]);
+		return 0;
+	}
+	if (!strcmp(argv[1], "-v") || !strcmp(argv[1], "--version")) {
+		printf("mbdispctl %s\n", MBDISPCTL_VERSION);
 		return 0;
 	}
 	if (!strcmp(argv[1], "status")) {
